@@ -40,7 +40,10 @@ module Yt
       def build_insert_body_part(part, attributes = {})
         {}.tap do |body_part|
           part[:keys].map do |key|
-            body_part[camelize key] = attributes[key] if attributes[key]
+            value = attributes[key]
+            if value
+              body_part[camelize key] = value.kind_of?(Time) ? value.utc : value
+            end
           end
         end
       end

@@ -112,7 +112,7 @@ module Yt
       def build_update_body_part(name, part, attributes = {})
         {}.tap do |body_part|
           part[:keys].map do |key|
-            body_part[camelize key] = attributes.fetch key, public_send(name).public_send(key)
+            value = attributes.fetch(key) { public_send(name).public_send(key) }
           end
         end
       end

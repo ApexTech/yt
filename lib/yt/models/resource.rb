@@ -113,6 +113,7 @@ module Yt
         {}.tap do |body_part|
           part[:keys].map do |key|
             value = attributes.fetch(key) { public_send(name).public_send(key) }
+            body_part[camelize key] = value.kind_of?(Time) ? value.utc : value
           end
         end
       end

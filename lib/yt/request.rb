@@ -57,7 +57,7 @@ module Yt
       @path = options[:path]
       @params = options.fetch :params, {}
       # Note: This is to be invoked by auth-only YouTube APIs.
-      @params[:key] = options[:api_key] if options[:api_key]
+      @params[:key] = options[:api_key] if options[:api_key] && !options[:auth]
       # Note: This is to be invoked by all YouTube API except Annotations,
       # Analyitics and Uploads
       camelize_keys! @params if options.fetch(:camelize_params, true)

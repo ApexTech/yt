@@ -24,6 +24,7 @@ module Yt
       has_attribute :licensed_content
       has_attribute :content_rating, default: {}
       has_attribute :item_count
+      has_attribute :bound_stream_id
 
       def youtube_rating
         content_rating['ytRating']

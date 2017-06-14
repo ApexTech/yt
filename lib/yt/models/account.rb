@@ -121,6 +121,8 @@ module Yt
 
       has_many :live_broadcasts
 
+      has_many :live_streams
+
       # The name of the content owner managing the account.
       # @return [String] name of the CMS account, if the account is partnered.
       # @return [nil] if the account is not a partnered content owner.

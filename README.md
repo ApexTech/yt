@@ -8,7 +8,7 @@ The **source code** is available on [GitHub](https://github.com/Fullscreen/yt) a
 [![Build Status](http://img.shields.io/travis/Fullscreen/yt/master.svg)](https://travis-ci.org/Fullscreen/yt)
 [![Coverage Status](http://img.shields.io/coveralls/Fullscreen/yt/master.svg)](https://coveralls.io/r/Fullscreen/yt)
 [![Dependency Status](http://img.shields.io/gemnasium/Fullscreen/yt.svg)](https://gemnasium.com/Fullscreen/yt)
-[![Code Climate](http://img.shields.io/codeclimate/github/Fullscreen/yt.svg)](https://codeclimate.com/github/Fullscreen/yt)
+[![Code Climate](https://codeclimate.com/github/Fullscreen/yt.png)](https://codeclimate.com/github/Fullscreen/yt)
 [![Online docs](http://img.shields.io/badge/docs-✓-green.svg)](http://www.rubydoc.info/gems/yt/frames)
 [![Gem Version](http://img.shields.io/gem/v/yt.svg)](http://rubygems.org/gems/yt)
 
@@ -44,7 +44,7 @@ To install on your system, run
 
 To use inside a bundled Ruby project, add this line to the Gemfile:
 
-    gem 'yt', '~> 0.28.0'
+    gem 'yt', '~> 0.32.0'
 
 Since the gem follows [Semantic Versioning](http://semver.org),
 indicating the full version in your Gemfile (~> *major*.*minor*.*patch*)
@@ -166,6 +166,37 @@ comment.updated_at #=> 2016-03-22 12:56:56 UTC
 comment.parent_id #=> "abc1234" (return nil if the comment is not a reply)
 ```
 
+Yt::BulkReportJob
+----------------
+
+Use [Yt::BulkReportJob](http://www.rubydoc.info/gems/yt/Yt/Models/BulkReportJob) to:
+
+* Get details of a bulk report job.
+
+```ruby
+content_owner = Yt::ContentOwner.new owner_name: 'CMSname', access_token: 'ya29.1.ABCDEFGHIJ'
+bulk_report_job = content_owner.bulk_report_jobs.first
+
+bulk_report_job.report_type_id #=> "content_owner_demographics_a1"
+```
+
+Yt::BulkReport
+----------------
+
+Use [Yt::BulkReport](http://www.rubydoc.info/gems/yt/Yt/Models/BulkReport) to:
+
+* Get details of a bulk report.
+
+```ruby
+content_owner = Yt::ContentOwner.new owner_name: 'CMSname', access_token: 'ya29.1.ABCDEFGHIJ'
+bulk_report_job = content_owner.bulk_report_jobs.first
+bulk_report = bulk_report_job.bulk_reports.first
+
+bulk_report.start_time #=> 2017-08-11 07:00:00 UTC
+bulk_report.end_time #=> 2017-08-12 07:00:00 UTC
+bulk_report.download_url #=> "https://youtubereporting.googleapis.com/v1/..."
+```
+
 Yt::Collections::Videos
 -----------------------
 
@@ -235,6 +266,11 @@ asset = content_owner.assets.where(id: 'A969176766549462', fetch_metadata: 'effe
 asset.metadata_effective.title #=> "Neu la anh" (different due to ownership conflicts)
 ```
 
+```ruby
+asset = content_owner.assets.where(id: 'A125058570526569', fetch_ownership: 'effective').first
+asset.ownership_effective.general_owners.first.owner # => "XOuN81q-MeEUVrsiZeK1lQ"
+```
+
 * to search for an asset
 
 ```ruby
@@ -264,6 +300,32 @@ claim.claim_history #=> #<Yt::Models::ClaimHistory ...>
 claim.claim_history.events[0].type #=> "claim_create"
 
 claim.delete #=> true
+
+data = {
+  is_manual_claim: true,
+  content_type: 'audiovisual',
+  asset_id: 'A123123123123123',
+  policy: { id: 'S123123123123123' },
+  video_id: 'myvIdeoIdYT',
+  match_info: {
+    match_segments: [
+      {
+        manual_segment: {
+          start: '00:00:20.000',
+          finish: '00:01:20.000'
+        }
+      },
+      {
+        manual_segment: {
+          start: '00:02:30.000',
+          finish: '00:03:50.000'
+        }
+      }
+    ]
+  }
+}
+
+content_owner.claims.insert(data)
 ```
 
 *The methods above require to be authenticated as the video’s content owner (see below).*
@@ -461,23 +523,6 @@ end
 so use the approach that you prefer.
 If a variable is set in both places, then `Yt.configure` takes precedence.
 
-Why you should use Yt…
-======================
-
-… and not [youtube_it](https://github.com/kylejginavan/youtube_it)?
-Because youtube_it does not support YouTube API V3, and the YouTube API V2 has
-been [officially deprecated as of March 4, 2014](https://developers.google.com/youtube/2.0/developers_guide_protocol_audience).
-If you need help upgrading your code, check [YOUTUBE_IT.md](https://github.com/Fullscreen/yt/blob/master/YOUTUBE_IT.md),
-a step-by-step comparison between youtube_it and Yt to make upgrade easier.
-
-… and not [Google Api Client](https://github.com/google/google-api-ruby-client)?
-Because Google Api Client is poorly coded, poorly documented and adds many
-dependencies, bloating the size of your project.
-
-… and not your own code? Because Yt is fully tested, well documented,
-has few dependencies and helps you forget about the burden of dealing with
-Google API!
-
 How to test
 ===========
 
@@ -485,15 +530,6 @@ Yt comes with two different sets of tests:
 
 1. tests in `spec/models`, `spec/collections` and `spec/errors` **do not hit** the YouTube API
 1. tests in `spec/requests` **hit** the YouTube API and require authentication
-
-The reason why some tests actually hit the YouTube API is because they are
-meant to really integrate Yt with YouTube. YouTube API is not exactly
-*the most reliable* API out there, so we need to make sure that the responses
-match the documentation.
-
-You don’t have to run all the tests every time you change code.
-Travis CI is already set up to do this for when whenever you push a branch
-or create a pull request for this project.
 
 To only run tests against models, collections and errors (which do not hit the API), type:
 
@@ -508,8 +544,26 @@ rspec
 ```
 
 This will fail unless you have set up a test YouTube application and some
-tests YouTube accounts to hit the API. Once again, you probably don’t need
-this, since Travis CI already takes care of running this kind of tests.
+tests YouTube accounts (with appropriate fixture data) to hit the API.
+Furthermore, tests that require authentication are divided into three
+roles, which correspond to each directory in `spec/requests`:
+
+* Account-based tests, which require a valid refresh token along with
+  the application-level credentials the refresh token was created with
+  (`YT_TEST_DEVICE_REFRESH_TOKEN`, `YT_TEST_DEVICE_CLIENT_ID`, and
+  `YT_TEST_DEVICE_CLIENT_SECRET` respectively).
+* Server application tests, which use a server API key
+  (`YT_TEST_SERVER_API_KEY`).
+* Tests that excercise YouTube's partner functionality. This requires an
+  a partner channel id (`YT_TEST_CONTENT_OWNER_NAME`), a refresh token
+  that's authenticated with that channel
+  (`YT_TEST_CONTENT_OWNER_REFRESH_TOKEN`), and the corresponding
+  application (`YT_TEST_PARTNER_CLIENT_ID` and
+  (`YT_TEST_PARTNER_CLIENT_SECRET`).
+
+The refresh tokens need to be generated with the `youtube`,
+`yt-analytics` and `userinfo.profile` permissions in order for tests to
+pass.
 
 How to release new versions
 ===========================
@@ -518,7 +572,7 @@ If you are a manager of this project, remember to upgrade the [Yt gem](http://ru
 whenever a new feature is added or a bug gets fixed.
 
 Make sure all the tests are passing on [Travis CI](https://travis-ci.org/Fullscreen/yt),
-document the changes in HISTORY.md and README.md, bump the version, then run
+document the changes in CHANGELOG.md and README.md, bump the version, then run
 
     rake release
 
@@ -537,3 +591,4 @@ the [YouTube Analytics API](https://developers.google.com/youtube/analytics).
 If you find that a method is missing, fork the project, add the missing code,
 write the appropriate tests, then submit a pull request, and it will gladly
 be merged!
+

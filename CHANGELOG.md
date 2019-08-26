@@ -6,6 +6,43 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 0.32.4 - 2019-06-26
+
+* [FEATURE] Add `ownership_effective` method to access asset ownership ("effective") via the asset object.
+* [FEATURE] List content owners of others with `content_owner.content_owners`
+* [FEATURE] Add `match_info` to insert claim request.
+* [FEATURE] Add `upload_reference_file` method for Reference file upload (thank you @jcohenho)
+* [FEATURE] Get one asset [by request](https://developers.google.com/youtube/partner/docs/v1/assets/get) (thank you @jcohenho)
+* [FEATURE] Add `update` method to Yt::Claim (thank you @jcohenho)
+
+## 0.32.3 - 2019-03-15
+
+* [ENHANCEMENT] Add `Yt::URL` to get id, kind, and its resource (channel, video, playlist)
+* [BUGFIX] Fix `subscription.insert` by adding a parameter
+* [FEATURE] Add `file_name` attribute to `Yt::FileDetail` model
+
+## 0.32.2 - 2018-05-25
+
+* Use YouTube Analytics API v2 instead of v1. See announcement of v1 deprecation
+https://developers.google.com/youtube/analytics/revision_history#april-26-2018
+
+## 0.32.1 - 2017-08-14
+
+* [FEATURE] Add `Yt::ContentOwner#bulk_report_jobs`
+* [FEATURE] Add `Yt::BulkReportJob#bulk_reports`
+
+## 0.32.0 - 2017-07-05
+
+**How to upgrade**
+
+If your code is expecting data from `reports` methods to always include historical data (the data from the period before joining), now you have to set `historical: true` specifically. It will not include historical data by default.
+
+* [IMPROVEMENT] Include historical data with `historical: true` option.
+
+## 0.31.2 - 2017-06-29
+
+* [BUGFIX] Return lifetime data correctly even when the channel joined content owner after a while since it's created.
+
 ## 0.31.1 - 2017-06-03
 
 * [FEATURE] Add `by: :youtube_product` option for reports.

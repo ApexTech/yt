@@ -223,6 +223,21 @@ module Yt
         status.embeddable
       end
 
+      #   @return [Boolean, nil] This value indicates whether the video is
+      #     designated as child-directed, and it contains the current "made for
+      #     kids" status of the video.
+      def made_for_kids?
+        status.made_for_kids
+      end
+
+      #   @return [Boolean, nil] In a videos.insert or videos.update request,
+      #     this property allows the channel owner to designate the video as
+      #     being child-directed. In a videos.list request, the property value
+      #     is only returned if the channel owner authorized the API request.
+      def self_declared_made_for_kids?
+        status.self_declared_made_for_kids
+      end
+
     ### CONTENT DETAILS ###
 
       has_one :content_detail
@@ -392,7 +407,7 @@ module Yt
 
       has_many :resumable_sessions
 
-      # @!attribute [r] channel
+      # @!attribute [r] claim
       #   @return [Yt::Models::Claim, nil] the first claim on the video by
       #     the content owner of the video, if eagerly loaded.
       def claim
@@ -621,7 +636,8 @@ module Yt
       # @private
       # Tells `has_reports` to retrieve the reports from YouTube Analytics API
       # either as a Channel or as a Content Owner.
-      # @see https://developers.google.com/youtube/analytics/v1/reports
+      # @see https://developers.google.com/youtube/analytics/channel_reports
+      # @see https://developers.google.com/youtube/analytics/content_owner_reports
       def reports_params
         {}.tap do |params|
           if auth.owner_name
@@ -642,8 +658,11 @@ module Yt
       # @private
       # Tells `has_many :resumable_sessions` what params are set for the object
       # associated to the uploaded file.
+      # https://developers.google.com/youtube/v3/docs/thumbnails/set
       def upload_params
-        {video_id: id}
+        params = {video_id: id}
+        params.merge! auth.upload_thumbnail_params
+        params
       end
 
       # @private
@@ -663,8 +682,17 @@ module Yt
         snippet_keys = [:title, :description, :tags, :category_id]
         snippet = {keys: snippet_keys, sanitize_brackets: true}
         status_keys = [:privacy_status, :embeddable, :license,
-          :public_stats_viewable, :publish_at]
+          :public_stats_viewable, :publish_at, :self_declared_made_for_kids]
         {snippet: snippet, status: {keys: status_keys}}
+      end
+
+      # For updating video with content owner auth.
+      # @see https://developers.google.com/youtube/v3/docs/videos/update
+      def update_params
+        params = super
+        params[:params] ||= {}
+        params[:params].merge! auth.update_video_params
+        params
       end
 
       # NOTE: Another irrational behavior of YouTube API. If you are setting a
